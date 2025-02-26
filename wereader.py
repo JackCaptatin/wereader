@@ -132,27 +132,24 @@ def get_bookinfo(bookId, cookies):
     return data
 
 def get_books_info(cookies):
-    """获取书架上的所有书籍详情，并导出到 Excel 文件"""
-    books = get_bookshelf(cookies)  # 调用现有的获取书架书籍的函数
+    """获取书架上的所有书籍名称，并导出到 Excel 文件"""
+    books = get_bookshelf(cookies)  # 仅获取书架信息
     books_info = []
 
     for book in books:
         try:
-            book_details = get_bookinfo(book.book_id, cookies)
-            # ✅ 打印 JSON 数据，查看 API 返回的结构
-            print(f"📌 获取到的书籍详情（bookId: {book.book_id}）：")
-            print(json.dumps(book_details, indent=4, ensure_ascii=False))  # 格式化输出 JSON
+            # ✅ 兼容 `book` 可能是字典的情况
+            book_id = book.get("bookId", "未知ID") if isinstance(book, dict) else getattr(book, "book_id", "未知ID")
+            book_title = book.get("title", "未知书籍") if isinstance(book, dict) else getattr(book, "title", "未知书籍")
+            book_author = book.get("author", "未知作者") if isinstance(book, dict) else getattr(book, "author", "未知作者")
+
             books_info.append({
-                "Book ID": book.book_id,
-                "Title": book.title,
-                "Author": book.author,
-                "Cover": book.cover,
-                "Details": book_details.get("description", "无简介"),  # 书籍的简介（如果有）
-                "Publisher": book_details.get("publisher", "无出版社"),  # 出版社（如果有）
-                "Price": book_details.get("price", "无价格"),  # 书籍价格（如果有）
+                "Book ID": book_id,
+                "Title": book_title,
+                "Author": book_author
             })
         except Exception as e:
-            print(f"获取书籍 {book.title} 的详情失败: {e}")
+            print(f"⚠️ 获取书籍信息失败: {e}")
             continue
 
     # 将书籍详情导出到 Excel
