@@ -1,6 +1,7 @@
 import itertools
 import os
 import sys
+import pandas as pd
 
 from PySide6.QtCore import (
     QItemSelectionModel,
@@ -23,6 +24,7 @@ from PySide6.QtWidgets import (
     QMainWindow,
     QProgressBar,
     QProgressDialog,
+    QMessageBox
 )
 from loguru import logger
 
@@ -49,6 +51,7 @@ class MainWindow(QMainWindow):
         self.ui.actionLoadHot.triggered.connect(self.show_hot_note)
         self.ui.actionLoadNotes.triggered.connect(self.download_notes)
         self.ui.actionOpen.triggered.connect(self.open_notes)
+        self.ui.actionExportBooks.triggered.connect(self.export_books_to_excel)  # 绑定导出书籍详情功能
         self.ui.listView.clicked.connect(self.on_listView_clicked)
         self.ui.tableView.clicked.connect(self.on_tableView_clicked)
 
@@ -228,6 +231,14 @@ class MainWindow(QMainWindow):
             self.booklist = wereader.get_bookshelf(self.cookies)
             self.books = itertools.cycle(self.booklist)
         self.init_model()
+
+    def export_books_to_excel(self):
+        """调用 wereader 模块中的 get_books_info 方法，导出书籍详情到 Excel"""
+        try:
+            wereader.get_books_info(self.cookies)  # 直接调用 wereader.py 里的函数
+            QMessageBox.information(self, "导出成功", "书籍详情已成功导出到 Excel 文件。")
+        except Exception as e:
+            QMessageBox.critical(self, "导出失败", f"导出书籍详情失败: {e}")
 
     def init_model(self):
         self.model.setStringList([b.title for b in self.booklist])

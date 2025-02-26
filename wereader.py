@@ -2,9 +2,19 @@ import os.path
 from collections import defaultdict, namedtuple
 from itertools import chain
 from operator import attrgetter
-
+import pandas as pd
 import requests
 
+class Book:
+    def __init__(self, book_id, title, author, cover):
+        self.book_id = book_id
+        self.title = title
+        self.author = author
+        self.cover = cover
+
+    def __repr__(self):
+        return f"{self.title} by {self.author}"
+    
 requests.packages.urllib3.disable_warnings()
 
 Book = namedtuple("Book", ["bookId", "title", "author", "cover"])
@@ -121,6 +131,39 @@ def get_bookinfo(bookId, cookies):
         raise Exception(r.text)
     return data
 
+def get_books_info(cookies):
+    """获取书架上的所有书籍详情，并导出到 Excel 文件"""
+    books = get_bookshelf(cookies)  # 调用现有的获取书架书籍的函数
+    books_info = []
+
+    for book in books:
+        try:
+            book_details = get_bookinfo(book.book_id, cookies)
+            books_info.append({
+                "Book ID": book.book_id,
+                "Title": book.title,
+                "Author": book.author,
+                "Cover": book.cover,
+                "Details": book_details.get("description", "无简介"),  # 书籍的简介（如果有）
+                "Publisher": book_details.get("publisher", "无出版社"),  # 出版社（如果有）
+                "Price": book_details.get("price", "无价格"),  # 书籍价格（如果有）
+            })
+        except Exception as e:
+            print(f"获取书籍 {book.title} 的详情失败: {e}")
+            continue
+
+    # 将书籍详情导出到 Excel
+    export_books_details_to_excel(books_info)
+
+def export_books_details_to_excel(books_info):
+    """将书籍详情导出到 Excel 文件"""
+    # 使用 pandas 创建 DataFrame
+    df = pd.DataFrame(books_info)
+
+    # 导出到 Excel 文件
+    df.to_excel("books_details.xlsx", index=False, engine='openpyxl')
+    print("书架书籍详情已成功导出到 'books_details.xlsx' 文件。")
+    
 
 def get_bookshelf(cookies):
     """获取书架上所有书"""
