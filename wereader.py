@@ -4,7 +4,7 @@ from itertools import chain
 from operator import attrgetter
 import pandas as pd
 import requests
-
+import json
 class Book:
     def __init__(self, book_id, title, author, cover):
         self.book_id = book_id
@@ -139,6 +139,9 @@ def get_books_info(cookies):
     for book in books:
         try:
             book_details = get_bookinfo(book.book_id, cookies)
+            # ✅ 打印 JSON 数据，查看 API 返回的结构
+            print(f"📌 获取到的书籍详情（bookId: {book.book_id}）：")
+            print(json.dumps(book_details, indent=4, ensure_ascii=False))  # 格式化输出 JSON
             books_info.append({
                 "Book ID": book.book_id,
                 "Title": book.title,
