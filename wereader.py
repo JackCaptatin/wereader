@@ -1,6 +1,7 @@
 import os.path
 from collections import defaultdict, namedtuple
 from itertools import chain
+from PySide6.QtWidgets import QFileDialog
 from operator import attrgetter
 import pandas as pd
 import requests
@@ -153,16 +154,25 @@ def get_books_info(cookies):
             continue
 
     # 将书籍详情导出到 Excel
-    export_books_details_to_excel(books_info)
+    export_books_to_excel(books_info)
 
-def export_books_details_to_excel(books_info):
-    """将书籍详情导出到 Excel 文件"""
-    # 使用 pandas 创建 DataFrame
-    df = pd.DataFrame(books_info)
+def export_books_to_excel(books_info):
+    """让用户选择 Excel 保存路径"""
+    # 📌 弹出对话框，选择文件保存路径
+    file_path, _ = QFileDialog.getSaveFileName(
+        None, "保存文件", "", "Excel Files (*.xlsx);;All Files (*)"
+    )
+    
+    if file_path:  # 只有用户选择了路径才保存
+        if not file_path.endswith(".xlsx"):
+            file_path += ".xlsx"  # 确保文件扩展名正确
 
-    # 导出到 Excel 文件
-    df.to_excel("books_details.xlsx", index=False, engine='openpyxl')
-    print("书架书籍详情已成功导出到 'books_details.xlsx' 文件。")
+        df = pd.DataFrame(books_info)
+        df.to_excel(file_path, index=False, engine='openpyxl')
+        print(f"✅ 书架书籍已成功导出到 '{file_path}'")
+    else:
+        print("❌ 取消了文件保存")
+
     
 
 def get_bookshelf(cookies):
